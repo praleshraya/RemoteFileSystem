@@ -1,5 +1,5 @@
 package myfiles;
-
+import java.lang.*;
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
@@ -37,7 +37,9 @@ public class FileSystemServer {
                         listFiles(out, inputLine.substring(5));
                     } else if (inputLine.startsWith("READ")) {
                         readFile(out, inputLine.substring(5));
+
                     } else if (inputLine.startsWith("WRITE")) {
+//                        out.println("Ready to recieve input string:");
                         writeFile(in, out, inputLine.substring(6));
                     } else if (inputLine.startsWith("CREATE_DIR")) {
                         createDirectory(out, inputLine.substring(11));
@@ -137,48 +139,27 @@ public class FileSystemServer {
          * @param out  the PrintWriter to send responses back to the client
          * @param path the file system path where the data should be written
          */
-        // OLD WRITE FUNCTION IS COMMENTED OUT !!!
         private void writeFile(BufferedReader in, PrintWriter out, String path) {
-            try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(path), StandardOpenOption.CREATE))
-            {
+            OpenOption[] options = {StandardOpenOption.CREATE, StandardOpenOption.APPEND};
+            Path filePath = Paths.get(path);
+
+            try (BufferedWriter writer = Files.newBufferedWriter(filePath, options)) {
                 String line;
-                out.println("Write Text: ");
-                while (!(line = (in.readLine())).equals("END")) {
+                while ((line = in.readLine()) != null && !line.equals("END")) {
                     writer.write(line);
                     writer.newLine();
                 }
-                out.println("WRITE COMPLETE");
 
+                out.println("WRITE COMPLETE");
             } catch (IOException e) {
                 out.println("ERROR: Unable to write file");
+                e.printStackTrace();
+            } finally {
+                out.println("END");
             }
         }
-//        private void writeFile(BufferedReader in, PrintWriter out, String path) {
-//            // CREATE creates the file if it does not exist.
-//            Path filePath = Paths.get(path);
-//
-//            try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE)) {
-//                String line;
-//                // Read lines from the client until "END" is received.
-//                while (true) {
-//                    line = in.readLine();
-//                    if (line == null) { // null check for end of stream
-//                        throw new IOException("Stream closed before END was received.");
-//                    }
-//                    if (line.trim().equals("END")) {
-//                        break;
-//                    }
-//                    writer.write(line);
-//                    writer.newLine();
-//                }
-//                out.println("WRITE COMPLETE");
-//            } catch (IOException e) {
-//                out.println("ERROR: Unable to write file");
-//                e.printStackTrace();
-//            } finally {
-//                out.println("END");
-//            }
-//        }
+
+
 
         private void createDirectory(PrintWriter out, String path) {
             Path directoryPath = Paths.get(path);
